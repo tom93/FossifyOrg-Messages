@@ -61,6 +61,7 @@ class MessagesImporter(private val activity: SimpleActivity) {
     fun restoreMessages(messagesBackup: List<MessagesBackup>, callback: (ImportResult) -> Unit) {
         ensureBackgroundThread {
             try {
+                messageWriter.debug("Importing backup with ${messagesBackup.size} messages")
                 if (config.importSms) {
                     messagesBackup.filterIsInstance<SmsBackup>().chunked(999) { chunk ->
                         try {
@@ -74,6 +75,7 @@ class MessagesImporter(private val activity: SimpleActivity) {
                 }
                 if (config.importMms) {
                     messagesBackup.filterIsInstance<MmsBackup>().forEach { mmsBackup ->
+                        System.err.println("XXX Importing an MMS")
                         try {
                             messageWriter.writeMmsMessage(mmsBackup)
                             messagesImported++
@@ -83,6 +85,7 @@ class MessagesImporter(private val activity: SimpleActivity) {
                         }
                     }
                 }
+                messageWriter.debug("Finished import")
                 refreshMessages()
             } catch (e: Exception) {
                 activity.showErrorToast(e)
