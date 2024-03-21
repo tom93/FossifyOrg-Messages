@@ -11,6 +11,7 @@ import com.google.android.mms.pdu_alt.PduHeaders
 import com.klinker.android.send_message.Utils
 import org.fossify.commons.extensions.getLongValue
 import org.fossify.commons.extensions.queryCursor
+import org.fossify.commons.extensions.toast // debug
 import org.fossify.commons.helpers.isRPlus
 import org.fossify.messages.models.MmsAddress
 import org.fossify.messages.models.MmsBackup
@@ -21,6 +22,11 @@ class MessagesWriter(private val context: Context) {
     private val INVALID_ID = -1L
     private val contentResolver = context.contentResolver
     private val threadIdCache = HashMap<String, Long>()
+
+    fun debug(message: String) {
+        System.err.println("XXX ${message}")
+        context.toast(message)
+    }
 
     fun writeSmsMessage(smsBackup: SmsBackup) {
         if (!smsExist(smsBackup)) {
@@ -33,6 +39,7 @@ class MessagesWriter(private val context: Context) {
         val exist = bulkSmsExist(smsBackups)
         val newSmsBackups = smsBackups.filterIndexed { i, _ -> !exist[i] }
         val contentValues = newSmsBackups.map { smsToContentValuesWithThreadId(it) }.toTypedArray()
+        debug("Writing a batch of ${newSmsBackups.size} messages (skipping ${smsBackups.size - newSmsBackups.size} existing messages)")
         contentResolver.bulkInsert(Sms.CONTENT_URI, contentValues)
     }
 
@@ -57,6 +64,7 @@ class MessagesWriter(private val context: Context) {
         // our approach is to query multiple timestamps in a single query
         // and then check the address and type columns separately
         // (the timestamps should be mostly unique, so this is efficient)
+        debug("Bulk checking existing messages")
         val dates = smsBackups.map { it.date }.distinct()
         val existingMessages = HashSet<Triple<Long, String, Int>>() // a message is represented as a (date, address, type) triple
         if (!dates.isEmpty()) {
@@ -84,6 +92,7 @@ class MessagesWriter(private val context: Context) {
 
     private fun getOrCreateThreadId(recipient: String): Long {
         return threadIdCache.getOrPut(recipient) {
+            System.err.println("XXX Getting thread ID")
             Utils.getOrCreateThreadId(context, recipient)
         }
     }
