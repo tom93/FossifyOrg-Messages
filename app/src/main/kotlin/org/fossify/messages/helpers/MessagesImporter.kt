@@ -61,18 +61,26 @@ class MessagesImporter(private val activity: SimpleActivity) {
     fun restoreMessages(messagesBackup: List<MessagesBackup>, callback: (ImportResult) -> Unit) {
         ensureBackgroundThread {
             try {
-                messagesBackup.forEach { message ->
-                    try {
-                        if (message.backupType == BackupType.SMS && config.importSms) {
-                            messageWriter.writeSmsMessage(message as SmsBackup)
-                            messagesImported++
-                        } else if (message.backupType == BackupType.MMS && config.importMms) {
-                            messageWriter.writeMmsMessage(message as MmsBackup)
-                            messagesImported++
+                if (config.importSms) {
+                    messagesBackup.filterIsInstance<SmsBackup>().chunked(999) { chunk ->
+                        try {
+                            messageWriter.bulkWriteSmsMessages(chunk)
+                            messagesImported += chunk.size
+                        } catch (e: Exception) {
+                            activity.showErrorToast(e)
+                            messagesFailed += chunk.size
                         }
-                    } catch (e: Exception) {
-                        activity.showErrorToast(e)
-                        messagesFailed++
+                    }
+                }
+                if (config.importMms) {
+                    messagesBackup.filterIsInstance<MmsBackup>().forEach { mmsBackup ->
+                        try {
+                            messageWriter.writeMmsMessage(mmsBackup)
+                            messagesImported++
+                        } catch (e: Exception) {
+                            activity.showErrorToast(e)
+                            messagesFailed++
+                        }
                     }
                 }
                 refreshMessages()
