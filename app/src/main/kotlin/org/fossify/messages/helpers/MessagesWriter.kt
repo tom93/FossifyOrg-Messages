@@ -1,6 +1,7 @@
 package org.fossify.messages.helpers
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.provider.Telephony.Mms
@@ -19,14 +20,20 @@ import org.fossify.messages.models.SmsBackup
 class MessagesWriter(private val context: Context) {
     private val INVALID_ID = -1L
     private val contentResolver = context.contentResolver
+    private val threadIdCache = HashMap<String, Long>()
 
     fun writeSmsMessage(smsBackup: SmsBackup) {
-        val contentValues = smsBackup.toContentValues()
-        val threadId = Utils.getOrCreateThreadId(context, smsBackup.address)
-        contentValues.put(Sms.THREAD_ID, threadId)
         if (!smsExist(smsBackup)) {
-            contentResolver.insert(Sms.CONTENT_URI, contentValues)
+            contentResolver.insert(Sms.CONTENT_URI, smsToContentValuesWithThreadId(smsBackup))
         }
+    }
+
+    fun bulkWriteSmsMessages(smsBackups: List<SmsBackup>) {
+        // the batch size must be at most 999 (see bulkSmsExist)
+        val exist = bulkSmsExist(smsBackups)
+        val newSmsBackups = smsBackups.filterIndexed { i, _ -> !exist[i] }
+        val contentValues = newSmsBackups.map { smsToContentValuesWithThreadId(it) }.toTypedArray()
+        contentResolver.bulkInsert(Sms.CONTENT_URI, contentValues)
     }
 
     private fun smsExist(smsBackup: SmsBackup): Boolean {
@@ -39,6 +46,46 @@ class MessagesWriter(private val context: Context) {
             exists = it.count > 0
         }
         return exists
+    }
+
+    private fun bulkSmsExist(smsBackups: List<SmsBackup>): BooleanArray {
+        // the number of messages must be at most 999, otherwise this might fail with:
+        // android.database.sqlite.SQLiteException: too many SQL variables (code 1)
+        // (it's a limit from older versions of SQLite, increased in https://sqlite.org/src/info/2def75693a8ae002)
+        //
+        // it's a tricky to make bulk queries with ContentResolver.query()
+        // our approach is to query multiple timestamps in a single query
+        // and then check the address and type columns separately
+        // (the timestamps should be mostly unique, so this is efficient)
+        val dates = smsBackups.map { it.date }.distinct()
+        val existingMessages = HashSet<Triple<Long, String, Int>>() // a message is represented as a (date, address, type) triple
+        if (!dates.isEmpty()) {
+            val uri = Sms.CONTENT_URI
+            val projection = arrayOf(Sms.DATE, Sms.ADDRESS, Sms.TYPE)
+            val selectionParams = "?" + ",?".repeat(dates.size - 1)
+            val selection = "${Sms.DATE} IN (${selectionParams})"
+            val selectionArgs = dates.map { it.toString() }.toTypedArray()
+            context.queryCursor(uri, projection, selection, selectionArgs, showErrors = true) {
+                val date = it.getLong(0)
+                val address = it.getString(1)
+                val type = it.getInt(2)
+                existingMessages.add(Triple(date, address, type))
+            }
+        }
+        return smsBackups.map { existingMessages.contains(Triple(it.date, it.address, it.type)) }.toBooleanArray()
+    }
+
+    private fun smsToContentValuesWithThreadId(smsBackup: SmsBackup): ContentValues {
+        val contentValues = smsBackup.toContentValues()
+        val threadId = getOrCreateThreadId(smsBackup.address)
+        contentValues.put(Sms.THREAD_ID, threadId)
+        return contentValues
+    }
+
+    private fun getOrCreateThreadId(recipient: String): Long {
+        return threadIdCache.getOrPut(recipient) {
+            Utils.getOrCreateThreadId(context, recipient)
+        }
     }
 
     fun writeMmsMessage(mmsBackup: MmsBackup) {
