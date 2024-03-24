@@ -85,6 +85,7 @@ class MessagesImporter(private val activity: SimpleActivity) {
                         }
                     }
                 }
+                messageWriter.fixCoversationDates()
                 messageWriter.debug("Finished import")
                 refreshMessages()
             } catch (e: Exception) {

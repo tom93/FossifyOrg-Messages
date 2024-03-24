@@ -13,6 +13,7 @@ import org.fossify.commons.extensions.getLongValue
 import org.fossify.commons.extensions.queryCursor
 import org.fossify.commons.extensions.toast // debug
 import org.fossify.commons.helpers.isRPlus
+import org.fossify.messages.extensions.updateLastConversationMessage
 import org.fossify.messages.models.MmsAddress
 import org.fossify.messages.models.MmsBackup
 import org.fossify.messages.models.MmsPart
@@ -21,6 +22,7 @@ import org.fossify.messages.models.SmsBackup
 class MessagesWriter(private val context: Context) {
     private val INVALID_ID = -1L
     private val contentResolver = context.contentResolver
+    private val modifiedThreadIds = mutableSetOf<Long>()
     private val threadIdCache = HashMap<String, Long>()
 
     fun debug(message: String) {
@@ -30,6 +32,7 @@ class MessagesWriter(private val context: Context) {
 
     fun writeSmsMessage(smsBackup: SmsBackup) {
         if (!smsExist(smsBackup)) {
+            modifiedThreadIds.add(getOrCreateThreadId(smsBackup.address))
             contentResolver.insert(Sms.CONTENT_URI, smsToContentValuesWithThreadId(smsBackup))
         }
     }
@@ -38,6 +41,7 @@ class MessagesWriter(private val context: Context) {
         // the batch size must be at most 999 (see bulkSmsExist)
         val exist = bulkSmsExist(smsBackups)
         val newSmsBackups = smsBackups.filterIndexed { i, _ -> !exist[i] }
+        newSmsBackups.forEach { modifiedThreadIds.add(getOrCreateThreadId(it.address)) }
         val contentValues = newSmsBackups.map { smsToContentValuesWithThreadId(it) }.toTypedArray()
         debug("Writing a batch of ${newSmsBackups.size} messages (skipping ${smsBackups.size - newSmsBackups.size} existing messages)")
         contentResolver.bulkInsert(Sms.CONTENT_URI, contentValues)
@@ -106,6 +110,7 @@ class MessagesWriter(private val context: Context) {
         if (threadId != INVALID_ID) {
             contentValues.put(Mms.THREAD_ID, threadId)
             if (!mmsExist(mmsBackup)) {
+                modifiedThreadIds.add(threadId)
                 contentResolver.insert(Mms.CONTENT_URI, contentValues)
             }
             val messageId = getMmsId(mmsBackup)
@@ -207,5 +212,13 @@ class MessagesWriter(private val context: Context) {
             exists = it.count > 0
         }
         return exists
+    }
+
+    fun fixCoversationDates() {
+        // TODO: document
+        debug("Fixing dates for ${modifiedThreadIds.size} conversations")
+        for (threadId in modifiedThreadIds) {
+            context.updateLastConversationMessage(threadId)
+        }
     }
 }
