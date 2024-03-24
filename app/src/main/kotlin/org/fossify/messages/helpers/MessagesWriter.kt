@@ -31,8 +31,8 @@ class MessagesWriter(private val context: Context) {
     }
 
     fun writeSmsMessage(smsBackup: SmsBackup) {
+        modifiedThreadIds.add(getOrCreateThreadId(smsBackup.address))
         if (!smsExist(smsBackup)) {
-            modifiedThreadIds.add(getOrCreateThreadId(smsBackup.address))
             contentResolver.insert(Sms.CONTENT_URI, smsToContentValuesWithThreadId(smsBackup))
         }
     }
@@ -41,7 +41,7 @@ class MessagesWriter(private val context: Context) {
         // the batch size must be at most 999 (see bulkSmsExist)
         val exist = bulkSmsExist(smsBackups)
         val newSmsBackups = smsBackups.filterIndexed { i, _ -> !exist[i] }
-        newSmsBackups.forEach { modifiedThreadIds.add(getOrCreateThreadId(it.address)) }
+        smsBackups.forEach { modifiedThreadIds.add(getOrCreateThreadId(it.address)) }
         val contentValues = newSmsBackups.map { smsToContentValuesWithThreadId(it) }.toTypedArray()
         debug("Writing a batch of ${newSmsBackups.size} messages (skipping ${smsBackups.size - newSmsBackups.size} existing messages)")
         contentResolver.bulkInsert(Sms.CONTENT_URI, contentValues)
