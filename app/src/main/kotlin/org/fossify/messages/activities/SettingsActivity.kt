@@ -23,6 +23,9 @@ import org.fossify.messages.helpers.*
 import java.util.Locale
 import kotlin.system.exitProcess
 
+import android.provider.Telephony.Threads
+import org.fossify.messages.extensions.*
+
 class SettingsActivity : SimpleActivity() {
     private var blockedNumbersAtPause = -1
     private var recycleBinMessages = 0
@@ -90,9 +93,36 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    private fun debug(message: String) {
+        System.err.println("XXX $message")
+        toast(message)
+    }
+
+    private fun debug(e: Exception) {
+        e.printStackTrace()
+        toast(e.toString())
+    }
+
     private val getContent = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             MessagesImporter(this).importMessages(uri)
+        } else {
+            ensureBackgroundThread {
+                debug("Fixing conversation timestamps...")
+                try {
+                    // based on updateLastConversationMessage(), with the fix from #149, and modified to update *all* conversations
+                    val uri = Threads.CONTENT_URI
+                    val selection = "1 = 0" // always-false condition, because we don't actually want to delete any messages
+                    contentResolver.delete(uri, selection, null)
+                    val conversations = getConversations()
+                    for (conversation in conversations) {
+                        insertOrUpdateConversation(conversation)
+                    }
+                    debug("Finished processing ${conversations.size} conversations")
+                } catch (e: Exception) {
+                    debug(e)
+                }
+            }
         }
     }
 
