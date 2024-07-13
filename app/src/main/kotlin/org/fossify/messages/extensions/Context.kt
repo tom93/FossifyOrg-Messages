@@ -39,6 +39,54 @@ import org.fossify.messages.messaging.SmsSender
 import org.fossify.messages.models.*
 import java.io.FileNotFoundException
 
+var prevDebugMessage = "" // for detecting and preventing a flood where a single message repeats many times
+var prevDebugMessageCount = 0L
+var debugMessageWindowStart = 0L // for detecting and preventing a flood where the messages are different
+var debugMessageWindowCount = 0L
+
+private fun shouldDisplayMessage(context: Context, msg: String): Boolean {
+    if (msg == prevDebugMessage) {
+        prevDebugMessageCount++
+        return false
+    }
+    if (prevDebugMessageCount > 1) {
+        System.err.println("XXX ${prevDebugMessage} (${prevDebugMessageCount} times)")
+        context.toast("${prevDebugMessage} (${prevDebugMessageCount} times)")
+    }
+    prevDebugMessage = msg
+    prevDebugMessageCount = 1
+
+    val now = System.currentTimeMillis()
+    if (now - debugMessageWindowStart >= 2000) {
+        debugMessageWindowStart = now
+        debugMessageWindowCount = 0
+    }
+    debugMessageWindowCount++
+    if (debugMessageWindowCount >= 10) {
+        if (debugMessageWindowCount == 10L) {
+            System.err.println("XXX Too many debug messages, pausing for 2 seconds")
+            context.toast("Too many debug messages, pausing for 2 seconds")
+        }
+        return false
+    }
+    return true
+}
+
+fun Context.debug(msg: String) {
+    if (shouldDisplayMessage(this, msg)) {
+        System.err.println("XXX ${msg}")
+        toast(msg)
+    }
+}
+
+fun Context.debugError(err: Throwable, msg: String = "Error") {
+    if (shouldDisplayMessage(this, msg)) {
+        System.err.println("XXX ${msg}:")
+        err.printStackTrace()
+        showErrorToast("${msg}: ${err}")
+    }
+}
+
 val Context.config: Config get() = Config.newInstance(applicationContext)
 
 fun Context.getMessagesDB() = MessagesDatabase.getInstance(this)
