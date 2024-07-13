@@ -18,22 +18,22 @@ import java.io.InputStream
 class MessagesReader(private val context: Context) {
 
     fun getMessagesToExport(
-        getSms: Boolean, getMms: Boolean, callback: (messages: List<MessagesBackup>) -> Unit
+        getSms: Boolean, getMms: Boolean, limitExport: Boolean, callback: (messages: List<MessagesBackup>) -> Unit
     ) {
         val conversationIds = context.getConversationIds()
         var smsMessages = listOf<SmsBackup>()
         var mmsMessages = listOf<MmsBackup>()
 
         if (getSms) {
-            smsMessages = getSmsMessages(conversationIds)
+            smsMessages = getSmsMessages(conversationIds, limitExport = limitExport)
         }
         if (getMms) {
-            mmsMessages = getMmsMessages(conversationIds)
+            mmsMessages = getMmsMessages(conversationIds, limitExport = limitExport)
         }
         callback(smsMessages + mmsMessages)
     }
 
-    private fun getSmsMessages(threadIds: List<Long>): List<SmsBackup> {
+    private fun getSmsMessages(threadIds: List<Long>, limitExport: Boolean = false): List<SmsBackup> {
         val projection = arrayOf(
             Sms.SUBSCRIPTION_ID,
             Sms.ADDRESS,
@@ -52,7 +52,9 @@ class MessagesReader(private val context: Context) {
         val smsList = mutableListOf<SmsBackup>()
 
         threadIds.map { it.toString() }.forEach { threadId ->
+            if (limitExport && smsList.size >= 100) return@forEach
             context.queryCursor(Sms.CONTENT_URI, projection, selection, arrayOf(threadId), showErrors = true) { cursor ->
+                if (limitExport && smsList.size >= 100) return@queryCursor
                 val subscriptionId = cursor.getLongValue(Sms.SUBSCRIPTION_ID)
                 val address = cursor.getStringValue(Sms.ADDRESS)
                 val body = cursor.getStringValueOrNull(Sms.BODY)
@@ -70,7 +72,7 @@ class MessagesReader(private val context: Context) {
         return smsList
     }
 
-    private fun getMmsMessages(threadIds: List<Long>, includeTextOnlyAttachment: Boolean = false): List<MmsBackup> {
+    private fun getMmsMessages(threadIds: List<Long>, includeTextOnlyAttachment: Boolean = false, limitExport: Boolean = false): List<MmsBackup> {
         val projection = arrayOf(
             Mms._ID,
             Mms.CREATOR,
@@ -98,12 +100,14 @@ class MessagesReader(private val context: Context) {
         val mmsList = mutableListOf<MmsBackup>()
 
         threadIds.map { it.toString() }.forEach { threadId ->
+            if (limitExport && mmsList.size >= 10) return@forEach
             val selectionArgs = if (includeTextOnlyAttachment) {
                 arrayOf(threadId, "1")
             } else {
                 arrayOf(threadId)
             }
             context.queryCursor(Mms.CONTENT_URI, projection, selection, selectionArgs, showErrors = true) { cursor ->
+                if (limitExport && mmsList.size >= 10) return@queryCursor
                 val mmsId = cursor.getLongValue(Mms._ID)
                 val creator = cursor.getStringValueOrNull(Mms.CREATOR)
                 val contentType = cursor.getStringValueOrNull(Mms.CONTENT_TYPE)

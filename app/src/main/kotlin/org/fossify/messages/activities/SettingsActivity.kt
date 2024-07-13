@@ -124,7 +124,7 @@ class SettingsActivity : SimpleActivity() {
         ensureBackgroundThread {
             var success = false
             try {
-                MessagesReader(this).getMessagesToExport(config.exportSms, config.exportMms) { messagesToExport ->
+                MessagesReader(this).getMessagesToExport(config.exportSms, config.exportMms, config.limitExport) { messagesToExport ->
                     if (messagesToExport.isEmpty()) {
                         toast(org.fossify.commons.R.string.no_entries_for_exporting)
                         return@getMessagesToExport

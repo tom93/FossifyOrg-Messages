@@ -88,6 +88,10 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getBoolean(EXPORT_MMS, true)
         set(exportMms) = prefs.edit().putBoolean(EXPORT_MMS, exportMms).apply()
 
+    var limitExport: Boolean
+        get() = prefs.getBoolean("limit_export", false)
+        set(limitExport) = prefs.edit().putBoolean("limit_export", limitExport).apply()
+
     var importSms: Boolean
         get() = prefs.getBoolean(IMPORT_SMS, true)
         set(importSms) = prefs.edit().putBoolean(IMPORT_SMS, importSms).apply()

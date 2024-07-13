@@ -17,6 +17,7 @@ class ExportMessagesDialog(
         val binding = DialogExportMessagesBinding.inflate(activity.layoutInflater).apply {
             exportSmsCheckbox.isChecked = config.exportSms
             exportMmsCheckbox.isChecked = config.exportMms
+            limitExportCheckbox.isChecked = config.limitExport
             exportMessagesFilename.setText(
                 activity.getString(R.string.messages) + "_" + activity.getCurrentFormattedDateTime()
             )
@@ -30,6 +31,7 @@ class ExportMessagesDialog(
                     alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                         config.exportSms = binding.exportSmsCheckbox.isChecked
                         config.exportMms = binding.exportMmsCheckbox.isChecked
+                        config.limitExport = binding.limitExportCheckbox.isChecked
                         val filename = binding.exportMessagesFilename.value
                         when {
                             filename.isEmpty() -> activity.toast(org.fossify.commons.R.string.empty_name)
