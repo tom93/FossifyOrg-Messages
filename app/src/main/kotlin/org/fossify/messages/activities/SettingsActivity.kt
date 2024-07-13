@@ -100,7 +100,7 @@ class SettingsActivity : SimpleActivity() {
 
     private val saveDocument = registerForActivityResult(ActivityResultContracts.CreateDocument(messagesFileType)) { uri ->
         if (uri != null) {
-            toast(org.fossify.commons.R.string.exporting)
+            //toast(org.fossify.commons.R.string.exporting)
             exportMessages(uri)
         }
     }
@@ -130,6 +130,7 @@ class SettingsActivity : SimpleActivity() {
                         return@getMessagesToExport
                     }
                     val json = Json { encodeDefaults = true }
+                    debug("Writing ${messagesToExport.size} message(s)")
                     contentResolver.openOutputStream(uri)!!.buffered().use { outputStream ->
                         json.encodeToStream(messagesToExport, outputStream)
                     }
@@ -143,6 +144,7 @@ class SettingsActivity : SimpleActivity() {
                     // delete the file to avoid leaving behind an empty/corrupt file
                     try {
                         DocumentsContract.deleteDocument(contentResolver, uri)
+                        debug("Deleted file")
                     } catch (ignored: Exception) {
                         // ignored because we don't want to overwhelm the user with two error messages
                         debugError(ignored, "Error deleting file")

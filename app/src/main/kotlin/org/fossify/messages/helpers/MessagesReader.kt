@@ -25,9 +25,11 @@ class MessagesReader(private val context: Context) {
         var mmsMessages = listOf<MmsBackup>()
 
         if (getSms) {
+            context.debug(if (limitExport) "Getting up to 100 SMS messages" else "Getting all SMS messages")
             smsMessages = getSmsMessages(conversationIds, limitExport = limitExport)
         }
         if (getMms) {
+            context.debug(if (limitExport) "Getting up to 10 MMS messages" else "Getting all MMS messages")
             mmsMessages = getMmsMessages(conversationIds, limitExport = limitExport)
         }
         callback(smsMessages + mmsMessages)
