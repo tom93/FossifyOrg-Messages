@@ -9,6 +9,7 @@ import android.util.Base64
 import org.fossify.commons.extensions.*
 import org.fossify.commons.helpers.isQPlus
 import org.fossify.commons.helpers.isRPlus
+import org.fossify.messages.extensions.*
 import org.fossify.messages.extensions.getConversationIds
 import org.fossify.messages.models.*
 import java.io.IOException
@@ -213,6 +214,8 @@ class MessagesReader(private val context: Context) {
                 return block(stream)
             }
         } catch (e: IOException) {
+            // This happens a lot (java.io.FileNotFoundException: Column _data not found.) so we don't log it.
+            //context.debugError(e, "usePart")
             return ""
         }
     }

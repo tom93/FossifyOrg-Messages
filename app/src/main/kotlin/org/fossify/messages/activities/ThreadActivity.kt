@@ -324,6 +324,7 @@ class ThreadActivity : SimpleActivity() {
                     }
                 }.toMutableList() as ArrayList<Message>
             } catch (e: Exception) {
+                debugError(e, "setupCachedMessages")
                 ArrayList()
             }
             clearExpiredScheduledMessages(threadId, messages)
@@ -375,6 +376,7 @@ class ThreadActivity : SimpleActivity() {
                     return@ensureBackgroundThread
                 }
             } catch (ignored: Exception) {
+                debugError(ignored, "setupThread")
             }
 
             setupParticipants()

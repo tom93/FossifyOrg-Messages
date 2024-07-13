@@ -10,6 +10,7 @@ import org.fossify.commons.extensions.toast
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.messages.activities.SimpleActivity
 import org.fossify.messages.dialogs.ImportMessagesDialog
+import org.fossify.messages.extensions.*
 import org.fossify.messages.extensions.config
 import org.fossify.messages.models.*
 import org.xmlpull.v1.XmlPullParser
@@ -34,7 +35,7 @@ class MessagesImporter(private val activity: SimpleActivity) {
                 importJson(uri)
             }
         } catch (e: Throwable) { // also catch OutOfMemoryError etc.
-            activity.showErrorToast(e.toString())
+            activity.debugError(e, "importMessages")
         }
     }
 
@@ -54,7 +55,7 @@ class MessagesImporter(private val activity: SimpleActivity) {
         } catch (e: IllegalArgumentException) {
             activity.toast(org.fossify.commons.R.string.invalid_file_format)
         } catch (e: Exception) {
-            activity.showErrorToast(e)
+            activity.debugError(e, "importJson")
         }
     }
 

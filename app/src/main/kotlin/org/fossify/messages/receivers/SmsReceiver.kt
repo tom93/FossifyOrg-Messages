@@ -82,11 +82,13 @@ class SmsReceiver : BroadcastReceiver() {
                     try {
                         context.insertOrUpdateConversation(conversation)
                     } catch (ignored: Exception) {
+                        context.debugError(ignored, "handleMessage")
                     }
 
                     try {
                         context.updateUnreadCountBadge(context.conversationsDB.getUnreadConversations())
                     } catch (ignored: Exception) {
+                        context.debugError(ignored, "updateUnreadCountBadge")
                     }
 
                     val senderName = context.getNameFromAddress(address, privateCursor)

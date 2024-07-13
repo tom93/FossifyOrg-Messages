@@ -11,6 +11,7 @@ import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.messages.R
 import org.fossify.messages.adapters.ArchivedConversationsAdapter
 import org.fossify.messages.databinding.ActivityArchivedConversationsBinding
+import org.fossify.messages.extensions.*
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.conversationsDB
 import org.fossify.messages.extensions.removeAllArchivedConversations
@@ -83,6 +84,7 @@ class ArchivedConversationsActivity : SimpleActivity() {
             val conversations = try {
                 conversationsDB.getAllArchived().toMutableList() as ArrayList<Conversation>
             } catch (e: Exception) {
+                debugError(e, "loadArchivedConversations")
                 ArrayList()
             }
 
@@ -95,6 +97,7 @@ class ArchivedConversationsActivity : SimpleActivity() {
         try {
             bus!!.register(this)
         } catch (ignored: Exception) {
+            debugError(ignored, "loadArchivedConversations")
         }
     }
 
@@ -145,6 +148,7 @@ class ArchivedConversationsActivity : SimpleActivity() {
                 updateConversations(sortedConversations)
             }
         } catch (ignored: Exception) {
+            debugError(ignored, "setupConversations")
         }
     }
 

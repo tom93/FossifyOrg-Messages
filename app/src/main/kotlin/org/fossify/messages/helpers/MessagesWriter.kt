@@ -11,6 +11,7 @@ import com.klinker.android.send_message.Utils
 import org.fossify.commons.extensions.getLongValue
 import org.fossify.commons.extensions.queryCursor
 import org.fossify.commons.helpers.isRPlus
+import org.fossify.messages.extensions.*
 import org.fossify.messages.models.MmsAddress
 import org.fossify.messages.models.MmsBackup
 import org.fossify.messages.models.MmsPart
@@ -135,7 +136,7 @@ class MessagesWriter(private val context: Context) {
                     }
                 }
             } catch (e: Exception) {
-
+                context.debugError(e, "writeMmsPart")
             }
         }
     }

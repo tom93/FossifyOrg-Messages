@@ -8,6 +8,7 @@ import android.os.Looper
 import android.os.PowerManager
 import org.fossify.commons.extensions.showErrorToast
 import org.fossify.commons.helpers.ensureBackgroundThread
+import org.fossify.messages.extensions.*
 import org.fossify.messages.extensions.conversationsDB
 import org.fossify.messages.extensions.deleteScheduledMessage
 import org.fossify.messages.extensions.getAddresses
@@ -36,7 +37,7 @@ class ScheduledMessageReceiver : BroadcastReceiver() {
         val message = try {
             context.messagesDB.getScheduledMessageWithId(threadId, messageId)
         } catch (e: Exception) {
-            e.printStackTrace()
+            context.debugError(e, "getScheduledMessageWithId")
             return
         }
 

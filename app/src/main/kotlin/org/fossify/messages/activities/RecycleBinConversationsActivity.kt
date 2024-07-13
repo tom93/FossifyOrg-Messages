@@ -11,6 +11,7 @@ import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.messages.R
 import org.fossify.messages.adapters.RecycleBinConversationsAdapter
 import org.fossify.messages.databinding.ActivityRecycleBinConversationsBinding
+import org.fossify.messages.extensions.*
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.conversationsDB
 import org.fossify.messages.extensions.emptyMessagesRecycleBin
@@ -147,6 +148,7 @@ class RecycleBinConversationsActivity : SimpleActivity() {
                 updateConversations(sortedConversations)
             }
         } catch (ignored: Exception) {
+            debugError(ignored, "setupConversations")
         }
     }
 

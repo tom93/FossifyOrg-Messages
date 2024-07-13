@@ -258,6 +258,7 @@ class MainActivity : SimpleActivity() {
                             try {
                                 bus!!.register(this)
                             } catch (ignored: Exception) {
+                                debugError(ignored, "askPermissions")
                             }
                         }
                     } else {
@@ -289,12 +290,14 @@ class MainActivity : SimpleActivity() {
             val conversations = try {
                 conversationsDB.getNonArchived().toMutableList() as ArrayList<Conversation>
             } catch (e: Exception) {
+                debugError(e, "getCachedConversations")
                 ArrayList()
             }
 
             val archived = try {
                 conversationsDB.getAllArchived()
             } catch (e: Exception) {
+                debugError(e, "getCachedConversations")
                 listOf()
             }
 
@@ -413,6 +416,7 @@ class MainActivity : SimpleActivity() {
                 }
             }
         } catch (ignored: Exception) {
+            debugError(ignored, "setupConversations")
         }
     }
 
@@ -474,6 +478,7 @@ class MainActivity : SimpleActivity() {
                 manager.dynamicShortcuts = listOf(newConversation)
                 config.lastHandledShortcutColor = appIconColor
             } catch (ignored: Exception) {
+                debugError(ignored, "checkShortcut")
             }
         }
     }

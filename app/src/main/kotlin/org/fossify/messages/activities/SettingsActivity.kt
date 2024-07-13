@@ -17,6 +17,7 @@ import org.fossify.commons.models.RadioItem
 import org.fossify.messages.R
 import org.fossify.messages.databinding.ActivitySettingsBinding
 import org.fossify.messages.dialogs.ExportMessagesDialog
+import org.fossify.messages.extensions.*
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.emptyMessagesRecycleBin
 import org.fossify.messages.extensions.messagesDB
@@ -136,7 +137,7 @@ class SettingsActivity : SimpleActivity() {
                     toast(org.fossify.commons.R.string.exporting_successful)
                 }
             } catch (e: Throwable) { // also catch OutOfMemoryError etc.
-                showErrorToast(e.toString())
+                debugError(e, "exportMessages")
             } finally {
                 if (!success) {
                     // delete the file to avoid leaving behind an empty/corrupt file
@@ -144,6 +145,7 @@ class SettingsActivity : SimpleActivity() {
                         DocumentsContract.deleteDocument(contentResolver, uri)
                     } catch (ignored: Exception) {
                         // ignored because we don't want to overwhelm the user with two error messages
+                        debugError(ignored, "Error deleting file")
                     }
                 }
             }

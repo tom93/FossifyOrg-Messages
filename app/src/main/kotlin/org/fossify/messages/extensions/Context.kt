@@ -192,7 +192,7 @@ fun Context.getMessages(
             val scheduledMessages = messagesDB.getScheduledThreadMessages(threadId)
             messages.addAll(scheduledMessages)
         } catch (e: Exception) {
-            e.printStackTrace()
+            debugError(e, "getScheduledThreadMessages")
         }
     }
 
@@ -499,6 +499,7 @@ fun Context.getThreadSnippet(threadId: Long): String {
             }
         }
     } catch (ignored: Exception) {
+        debugError(ignored, "getThreadSnippet")
     }
     return snippet
 }
@@ -701,6 +702,7 @@ fun Context.insertNewSMS(
         val newUri = contentResolver.insert(uri, contentValues)
         newUri?.lastPathSegment?.toLong() ?: 0L
     } catch (e: Exception) {
+        debugError(e, "insertNewSMS")
         0L
     }
 }
@@ -714,7 +716,7 @@ fun Context.removeAllArchivedConversations(callback: (() -> Unit)? = null) {
             toast(R.string.archive_emptied_successfully)
             callback?.invoke()
         } catch (e: Exception) {
-            toast(org.fossify.commons.R.string.unknown_error_occurred)
+            debugError(e, "removeAllArchivedConversations")
         }
     }
 }
@@ -733,7 +735,7 @@ fun Context.deleteConversation(threadId: Long) {
     try {
         contentResolver.delete(uri, selection, selectionArgs)
     } catch (e: Exception) {
-        e.printStackTrace()
+        debugError(e, "deleteConversation")
     }
 
     conversationsDB.deleteThreadId(threadId)
@@ -755,6 +757,7 @@ fun Context.checkAndDeleteOldRecycleBinMessages(callback: (() -> Unit)? = null) 
                 }
                 callback?.invoke()
             } catch (e: Exception) {
+                debugError(e, "checkAndDeleteOldBinned")
             }
         }
     }
@@ -889,6 +892,7 @@ fun Context.getThreadId(address: String): Long {
     return try {
         Threads.getOrCreateThreadId(this, address)
     } catch (e: Exception) {
+        debugError(e, "getThreadId")
         0L
     }
 }
@@ -898,6 +902,7 @@ fun Context.getThreadId(addresses: Set<String>): Long {
     return try {
         Threads.getOrCreateThreadId(this, addresses)
     } catch (e: Exception) {
+        debugError(e, "getThreadId")
         0L
     }
 }
@@ -977,6 +982,7 @@ fun Context.getSmsDraft(threadId: Long): String? {
             }
         }
     } catch (e: Exception) {
+        debugError(e, "getSmsDraft")
     }
 
     return null
@@ -999,6 +1005,9 @@ fun Context.getAllDrafts(): HashMap<Long, String?> {
             }
         }
     } catch (e: Exception) {
+        // This happens the first time the app is launched (before permissions are granted), so we don't display a toast.
+        //debugError(e, "getAllDrafts")
+        e.printStackTrace()
     }
 
     return drafts
@@ -1016,6 +1025,7 @@ fun Context.saveSmsDraft(body: String, threadId: Long) {
     try {
         contentResolver.insert(uri, contentValues)
     } catch (e: Exception) {
+        debugError(e, "saveSmsDraft")
     }
 }
 
@@ -1034,6 +1044,7 @@ fun Context.deleteSmsDraft(threadId: Long) {
             }
         }
     } catch (e: Exception) {
+        debugError(e, "deleteSmsDraft")
     }
 }
 
@@ -1046,6 +1057,7 @@ fun Context.updateLastConversationMessage(threadId: Long) {
         val newConversation = getConversations(threadId)[0]
         insertOrUpdateConversation(newConversation)
     } catch (e: Exception) {
+        debugError(e, "updateLastConversationMessage")
     }
 }
 
@@ -1125,7 +1137,7 @@ fun Context.renameConversation(conversation: Conversation, newTitle: String): Co
     try {
         conversationsDB.insertOrUpdate(updatedConv)
     } catch (e: Exception) {
-        e.printStackTrace()
+        debugError(e, "renameConversation")
     }
     return updatedConv
 }
@@ -1156,7 +1168,7 @@ fun Context.createTemporaryThread(message: Message, threadId: Long = generateRan
     try {
         conversationsDB.insertOrUpdate(conversation)
     } catch (e: Exception) {
-        e.printStackTrace()
+        debugError(e, "createTemporaryThread")
     }
 }
 
@@ -1181,7 +1193,7 @@ fun Context.clearExpiredScheduledMessages(threadId: Long, messagesToDelete: List
             }
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        debugError(e, "clearExpiredScheduledMessages")
         return
     }
 }
