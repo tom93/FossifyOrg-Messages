@@ -36,7 +36,7 @@ class MessagesWriter(private val context: Context) {
         val selection = "${Sms.DATE} = ? AND ${Sms.ADDRESS} = ? AND ${Sms.TYPE} = ?"
         val selectionArgs = arrayOf(smsBackup.date.toString(), smsBackup.address, smsBackup.type.toString())
         var exists = false
-        context.queryCursor(uri, projection, selection, selectionArgs) {
+        context.queryCursor(uri, projection, selection, selectionArgs, showErrors = true) {
             exists = it.count > 0
         }
         return exists
@@ -80,7 +80,7 @@ class MessagesWriter(private val context: Context) {
         val selection = "${Mms.DATE} = ? AND ${Mms.DATE_SENT} = ? AND ${Mms.THREAD_ID} = ? AND ${Mms.MESSAGE_BOX} = ?"
         val selectionArgs = arrayOf(mmsBackup.date.toString(), mmsBackup.dateSent.toString(), threadId.toString(), mmsBackup.messageBox.toString())
         var id = INVALID_ID
-        context.queryCursor(uri, projection, selection, selectionArgs) {
+        context.queryCursor(uri, projection, selection, selectionArgs, showErrors = true) {
             id = it.getLongValue(Mms._ID)
         }
 
@@ -98,7 +98,7 @@ class MessagesWriter(private val context: Context) {
         val selection = "${Mms.Addr.TYPE} = ? AND ${Mms.Addr.ADDRESS} = ? AND ${Mms.Addr.MSG_ID} = ?"
         val selectionArgs = arrayOf(mmsAddress.type.toString(), mmsAddress.address.toString(), messageId.toString())
         var exists = false
-        context.queryCursor(addressUri, projection, selection, selectionArgs) {
+        context.queryCursor(addressUri, projection, selection, selectionArgs, showErrors = true) {
             exists = it.count > 0
         }
         return exists
@@ -148,7 +148,7 @@ class MessagesWriter(private val context: Context) {
         val selection = "${Mms.Part.CONTENT_LOCATION} = ? AND ${Mms.Part.CONTENT_TYPE} = ? AND ${Mms.Part.MSG_ID} = ? AND ${Mms.Part.CONTENT_ID} = ?"
         val selectionArgs = arrayOf(mmsPart.contentLocation.toString(), mmsPart.contentType, messageId.toString(), mmsPart.contentId.toString())
         var exists = false
-        context.queryCursor(uri, projection, selection, selectionArgs) {
+        context.queryCursor(uri, projection, selection, selectionArgs, showErrors = true) {
             exists = it.count > 0
         }
         return exists

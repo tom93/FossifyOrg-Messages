@@ -52,7 +52,7 @@ class MessagesReader(private val context: Context) {
         val smsList = mutableListOf<SmsBackup>()
 
         threadIds.map { it.toString() }.forEach { threadId ->
-            context.queryCursor(Sms.CONTENT_URI, projection, selection, arrayOf(threadId)) { cursor ->
+            context.queryCursor(Sms.CONTENT_URI, projection, selection, arrayOf(threadId), showErrors = true) { cursor ->
                 val subscriptionId = cursor.getLongValue(Sms.SUBSCRIPTION_ID)
                 val address = cursor.getStringValue(Sms.ADDRESS)
                 val body = cursor.getStringValueOrNull(Sms.BODY)
@@ -103,7 +103,7 @@ class MessagesReader(private val context: Context) {
             } else {
                 arrayOf(threadId)
             }
-            context.queryCursor(Mms.CONTENT_URI, projection, selection, selectionArgs) { cursor ->
+            context.queryCursor(Mms.CONTENT_URI, projection, selection, selectionArgs, showErrors = true) { cursor ->
                 val mmsId = cursor.getLongValue(Mms._ID)
                 val creator = cursor.getStringValueOrNull(Mms.CREATOR)
                 val contentType = cursor.getStringValueOrNull(Mms.CONTENT_TYPE)
@@ -174,7 +174,7 @@ class MessagesReader(private val context: Context) {
 
         val selection = "${Mms.Part.MSG_ID} = ?"
         val selectionArgs = arrayOf(mmsId.toString())
-        context.queryCursor(uri, projection, selection, selectionArgs) { cursor ->
+        context.queryCursor(uri, projection, selection, selectionArgs, showErrors = true) { cursor ->
             val partId = cursor.getLongValue(Mms.Part._ID)
             val contentDisposition = cursor.getStringValueOrNull(Mms.Part.CONTENT_DISPOSITION)
             val charset = cursor.getStringValueOrNull(Mms.Part.CHARSET)
@@ -227,7 +227,7 @@ class MessagesReader(private val context: Context) {
         val projection = arrayOf(Mms.Addr.ADDRESS, Mms.Addr.TYPE, Mms.Addr.CHARSET)
         val selection = "${Mms.Addr.MSG_ID}= ?"
         val selectionArgs = arrayOf(messageId.toString())
-        context.queryCursor(uri, projection, selection, selectionArgs) { cursor ->
+        context.queryCursor(uri, projection, selection, selectionArgs, showErrors = true) { cursor ->
             val address = cursor.getStringValue(Mms.Addr.ADDRESS)
             val type = cursor.getIntValue(Mms.Addr.TYPE)
             val charset = cursor.getIntValue(Mms.Addr.CHARSET)
