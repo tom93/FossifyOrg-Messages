@@ -61,6 +61,7 @@ class MessagesImporter(private val activity: SimpleActivity) {
 
     fun restoreMessages(messagesBackup: List<MessagesBackup>, callback: (ImportResult) -> Unit) {
         ensureBackgroundThread {
+            var prevToastTime = System.currentTimeMillis() - 2000 // for displaying a toast with the progress every ~3 seconds, with the first toast displayed after ~1 second
             try {
                 messagesBackup.forEach { message ->
                     try {
@@ -71,11 +72,17 @@ class MessagesImporter(private val activity: SimpleActivity) {
                             messageWriter.writeMmsMessage(message as MmsBackup)
                             messagesImported++
                         }
+                        val now = System.currentTimeMillis()
+                        if (now - prevToastTime >= 3000 && messagesImported != messagesBackup.size) {
+                            prevToastTime = now
+                            activity.toast("Importing… (${messagesImported}/${messagesBackup.size})")
+                        }
                     } catch (e: Exception) {
                         activity.showErrorToast(e)
                         messagesFailed++
                     }
                 }
+                activity.toast("Importing… (${messagesImported}/${messagesBackup.size})")
                 refreshMessages()
             } catch (e: Exception) {
                 activity.showErrorToast(e)
